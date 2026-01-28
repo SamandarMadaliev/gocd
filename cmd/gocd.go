@@ -7,9 +7,10 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "gocd",
-	Short: "gocd is cli helper",
-	Long:  "gocd is cli helper that stands for go clean architecture and domain driven design",
+	Use:     "gocd",
+	Short:   "gocd is cli helper",
+	Long:    "gocd is cli helper that stands for go clean architecture and domain driven design",
+	Example: "gocd init",
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
 	},
