@@ -1,67 +1,38 @@
 package commands
 
 import (
-	"fmt"
 	"io"
-	"log"
 	"os"
-
-	"github.com/SamandarMadaliev/gocd/internal/types"
 )
 
 func Init() {
-	projectStructure := types.NestedMap{
-		"project": types.NestedMap{
-			"cmd": []types.NestedMap{
-				{
-					"file_name":     "main.go",
-					"template_path": "./internal/templates/cmd/cmd_main.temp",
-				},
-				{
-					"file_name":     "init.go",
-					"template_path": "./internal/templates/cmd/cmd_init.temp",
-				},
-			},
-		},
+	rootPath := "./project/"
+	var projectFolders = []string{
+		rootPath + "cmd",
+		rootPath + "internal",
+		rootPath + "pkg",
 	}
-	fmt.Println(projectStructure["project"])
-	//for key, value := range projectStructure {
-	//	fmt.Println(key, value)
-	//}
-	generateFolderStructure(projectStructure)
-	fmt.Println("Initializing gocd project...")
-}
 
-func generateFolderStructure(projectStructureMap types.NestedMap) {
-	for key, value := range projectStructureMap {
-		if key != "" {
-			err := createFolder(key, "./", 0755)
-			if err != nil {
-				log.Fatal(err)
-			}
-		}
+	var projectFiles = map[string]string{
+		"./internal/templates/cmd/cmd_init.temp": rootPath + "cmd/init.go",
+		"./internal/templates/cmd/cmd_main.temp": rootPath + "cmd/main.go",
+	}
 
-		if innerFolder, ok := value.(types.NestedMap); ok {
-			generateFolderStructure(innerFolder)
-		}
+	// Generate folders
+	for _, dir := range projectFolders {
+		generateFolder(dir, 0755)
+	}
 
-		if innerFiles, ok := value.([]types.NestedMap); ok {
-			for _, file := range innerFiles {
-				err := createFileFromTemplate(file["template_path"].(string), "./"+file["file_name"].(string), 0644)
-				if err != nil {
-					log.Fatal(err)
-				}
-			}
-		}
-
+	for fromFilePath, toFilePath := range projectFiles {
+		generateFileFromTemplate(fromFilePath, toFilePath)
 	}
 }
 
-func createFolder(folderName string, path string, permission os.FileMode) error {
-	return os.Mkdir(path+folderName, permission)
+func generateFolder(fullPath string, permission os.FileMode) error {
+	return os.MkdirAll(fullPath, permission)
 }
 
-func createFileFromTemplate(fromFile string, toFile string, toFilePermission os.FileMode) error {
+func generateFileFromTemplate(fromFile string, toFile string) error {
 	// Open source file
 	src, err := os.Open(fromFile)
 	if err != nil {
