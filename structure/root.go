@@ -13,3 +13,20 @@ type Node struct {
 	Template string
 	Resource []Node
 }
+
+var ignoreFile = Node{
+	Type:     File,
+	Name:     ".gitignore",
+	Template: "templates/root/gitignore.temp",
+	Resource: make([]Node, 0),
+}
+
+var ProjectStruct = Node{
+	Type: Folder,
+	Resource: []Node{
+		CMD,
+		INTERNAL,
+		PKG,
+		ignoreFile,
+	},
+}

@@ -4,7 +4,7 @@ var mainFile = []Node{
 	{
 		Type:     File,
 		Name:     "main.go",
-		Template: "",
+		Template: "templates/cmd/main.temp",
 	},
 }
 
