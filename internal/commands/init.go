@@ -5,10 +5,21 @@ import (
 	"os"
 
 	"github.com/SamandarMadaliev/gocd/assets"
+	"github.com/SamandarMadaliev/gocd/pkg/helpers"
 	"github.com/SamandarMadaliev/gocd/structure"
 )
 
 func Init(projectName string) {
+	if len([]rune(projectName)) > 1 && projectName != "." {
+		exists, err := helpers.FolderExists(projectName)
+		if err != nil {
+			log.Fatalln("Error checking project existence:", err.Error())
+		}
+		if exists {
+			log.Fatalln("Project already exists")
+		}
+	}
+
 	generateProject(structure.ProjectStruct, projectName)
 }
 
