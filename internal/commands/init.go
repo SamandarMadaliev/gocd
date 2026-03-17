@@ -5,13 +5,26 @@ import (
 	"os"
 
 	"github.com/SamandarMadaliev/gocd/assets"
+	"github.com/SamandarMadaliev/gocd/internal/components"
 	"github.com/SamandarMadaliev/gocd/pkg/helpers"
 	"github.com/SamandarMadaliev/gocd/structure"
 )
 
-func Init(projectName string) {
-	if len([]rune(projectName)) > 1 && projectName != "." {
-		exists, err := helpers.FolderExists(projectName)
+type ProjectConfigs struct {
+	ProjectName string
+	ModulePath  string
+}
+
+func NewProjectConfigs(projectName string, modulePath string) *ProjectConfigs {
+	return &ProjectConfigs{
+		ProjectName: projectName,
+		ModulePath:  modulePath,
+	}
+}
+
+func Init(projectConfigs *ProjectConfigs) {
+	if len([]rune(projectConfigs.ProjectName)) > 1 && projectConfigs.ProjectName != "." {
+		exists, err := helpers.FolderExists(projectConfigs.ProjectName)
 		if err != nil {
 			log.Fatalln("Error checking project existence:", err.Error())
 		}
@@ -20,7 +33,7 @@ func Init(projectName string) {
 		}
 	}
 
-	generateProject(structure.ProjectStruct, projectName)
+	generateProject(structure.ProjectStruct, projectConfigs.ProjectName)
 }
 
 func generateProject(node structure.Node, rootPath string) {
@@ -32,7 +45,7 @@ func generateProject(node structure.Node, rootPath string) {
 	}
 
 	if node.Type == structure.File {
-		err := generateFileFromTemplate(node.Template, rootPath+node.Name)
+		err := generateFileFromTemplate(node, rootPath)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -49,19 +62,26 @@ func generateFolder(fullPath string, permission os.FileMode) error {
 	return os.MkdirAll(fullPath, permission)
 }
 
-func generateFileFromTemplate(fromFile string, toFile string) error {
-	src, err := assets.GetTemplate(fromFile)
+func generateFileFromTemplate(node structure.Node, rootPath string) error {
+	temp, err := assets.GetTemplate(node.Template)
 	if err != nil {
 		return err
 	}
 
+	data := components.PostgresPgxPlaceholders{
+		ProjectPlaceholders: components.ProjectPlaceholders{
+			ProjectName: node.Name,
+		},
+	}
+	src, err := node.ProcessFunc(temp, data)
+
 	// Create destination file
-	dst, err := os.Create(toFile)
+	dst, err := os.Create(rootPath + node.Name)
 	if err != nil {
 		return err
 	}
 	defer dst.Close()
 
 	// Copy content from source to destination
-	return os.WriteFile(toFile, src, 0644)
+	return os.WriteFile(rootPath+node.Name, src, 0644)
 }

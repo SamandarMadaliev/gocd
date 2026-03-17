@@ -1,5 +1,7 @@
 package structure
 
+import "text/template"
+
 type NodeType string
 
 const (
@@ -8,17 +10,17 @@ const (
 )
 
 type Node struct {
-	Type     NodeType
-	Name     string
-	Template string
-	Resource []Node
+	Type        NodeType
+	Name        string
+	Template    string
+	ProcessFunc func(source *template.Template, values any) ([]byte, error)
+	Resource    []Node
 }
 
 var ignoreFile = Node{
 	Type:     File,
 	Name:     ".gitignore",
 	Template: "templates/root/gitignore.temp",
-	Resource: make([]Node, 0),
 }
 
 var dockerCompose = Node{
